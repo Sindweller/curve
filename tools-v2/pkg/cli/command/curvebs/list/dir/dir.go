@@ -100,11 +100,16 @@ func (pCmd *DirCommand) Init(cmd *cobra.Command, args []string) error {
 	timeout := config.GetFlagDuration(pCmd.Cmd, config.RPCTIMEOUT)
 	retrytimes := config.GetFlagInt32(pCmd.Cmd, config.RPCRETRYTIMES)
 	fileName := config.GetBsFlagString(pCmd.Cmd, config.CURVEBS_DIR)
-	userName := config.GetBsFlagString(pCmd.Cmd, config.CURVEBS_USER)
+	owner := config.GetBsFlagString(pCmd.Cmd, config.CURVEBS_USER)
+	date, errDat := cobrautil.GetTimeofDayUs()
+	if errDat.TypeCode() != cmderror.CODE_SUCCESS {
+		return errDat.ToError()
+	}
 	rpc := &ListDirRpc{
 		Request: &nameserver2.ListDirRequest{
 			FileName: &fileName,
-			Owner:    &userName,
+			Owner:    &owner,
+			Date:     &date,
 		},
 		Info: basecmd.NewRpc(mdsAddrs, timeout, retrytimes, "ListDir"),
 	}
