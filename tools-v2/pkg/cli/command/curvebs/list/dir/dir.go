@@ -179,14 +179,16 @@ func (pCmd *DirCommand) RunCommand(cmd *cobra.Command, args []string) error {
 			row[cobrautil.ROW_CTIME] = string(info.GetCtime())
 			// Get file size
 			// 加上path
-			fInfoCmd := file.NewFileCommand()
+			//fInfoCmd := file.NewFileCommand()
+			fInfoCmd := *pCmd.Cmd
+			config.AddBsPathRequiredFlag(&fInfoCmd)
 			fInfoCmd.Flags().Set("path", row[cobrautil.ROW_FILE_NAME])
 			fInfoCmd.Flags().VisitAll(func(flag *pflag.Flag) {
 				log.Println(flag.Name)
 				log.Println(flag.Value)
 			})
 			log.Println("-----")
-			sizeRes, err := file.GetFileSize(fInfoCmd)
+			sizeRes, err := file.GetFileSize(&fInfoCmd)
 			if err.TypeCode() != cmderror.CODE_SUCCESS {
 				//log.Printf("%s failed to get file size: %v", info.GetFileName(), err)
 				return err.ToError()
@@ -195,7 +197,7 @@ func (pCmd *DirCommand) RunCommand(cmd *cobra.Command, args []string) error {
 			log.Println(sizeRes.GetFileSize())
 			// Get allocated size
 			log.Println("++++++")
-			allocRes, err := file.GetAllocatedSize(fInfoCmd)
+			allocRes, err := file.GetAllocatedSize(&fInfoCmd)
 			if err.TypeCode() != cmderror.CODE_SUCCESS {
 				//log.Printf("%s failed to get allocated size: %v", info.GetFileName(), err)
 				return err.ToError()
