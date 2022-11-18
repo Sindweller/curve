@@ -87,6 +87,7 @@ func (pCmd *DirCommand) AddFlags() {
 	config.AddRpcRetryTimesFlag(pCmd.Cmd)
 	config.AddRpcTimeoutFlag(pCmd.Cmd)
 	config.AddBsDirOptionFlag(pCmd.Cmd)
+	config.AddBsUserOptionFlag(pCmd.Cmd)
 }
 
 // Init implements basecmd.FinalCurveCmdFunc
@@ -99,10 +100,11 @@ func (pCmd *DirCommand) Init(cmd *cobra.Command, args []string) error {
 	timeout := config.GetFlagDuration(pCmd.Cmd, config.RPCTIMEOUT)
 	retrytimes := config.GetFlagInt32(pCmd.Cmd, config.RPCRETRYTIMES)
 	fileName := config.GetBsFlagString(pCmd.Cmd, config.CURVEBS_DIR)
-
+	userName := config.GetBsFlagString(pCmd.Cmd, config.CURVEBS_USER)
 	rpc := &ListDirRpc{
 		Request: &nameserver2.ListDirRequest{
 			FileName: &fileName,
+			Owner:    &userName,
 		},
 		Info: basecmd.NewRpc(mdsAddrs, timeout, retrytimes, "ListDir"),
 	}
