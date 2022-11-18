@@ -32,6 +32,7 @@ import (
 	"github.com/opencurve/curve/tools-v2/pkg/output"
 	"github.com/opencurve/curve/tools-v2/proto/proto/nameserver2"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"log"
@@ -179,7 +180,11 @@ func (pCmd *DirCommand) RunCommand(cmd *cobra.Command, args []string) error {
 			// Get file size
 			// 加上path
 			fInfoCmd := file.NewFileCommand()
-			fInfoCmd.SetArgs([]string{"--path", row[cobrautil.ROW_FILE_NAME]})
+			fInfoCmd.Flags().Set("path", row[cobrautil.ROW_FILE_NAME])
+			fInfoCmd.Flags().VisitAll(func(flag *pflag.Flag) {
+				log.Println(flag.Name)
+				log.Println(flag.Value)
+			})
 			log.Println("-----")
 			sizeRes, err := file.GetFileSize(fInfoCmd)
 			if err.TypeCode() != cmderror.CODE_SUCCESS {
