@@ -178,11 +178,8 @@ func (pCmd *DirCommand) RunCommand(cmd *cobra.Command, args []string) error {
 			row[cobrautil.ROW_CTIME] = string(info.GetCtime())
 			// Get file size
 			// 加上path
-			fInfoCmd := pCmd.Cmd
-			config.AddBsPathRequiredFlag(fInfoCmd)
+			fInfoCmd := file.NewFileCommand()
 			fInfoCmd.SetArgs([]string{"--path", row[cobrautil.ROW_FILE_NAME]})
-			log.Println(config.GetBsFlagString(fInfoCmd, "path"))
-			log.Println(fInfoCmd.Flags())
 			log.Println("-----")
 			sizeRes, err := file.GetFileSize(fInfoCmd)
 			if err.TypeCode() != cmderror.CODE_SUCCESS {
