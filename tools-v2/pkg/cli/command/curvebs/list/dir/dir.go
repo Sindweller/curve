@@ -33,7 +33,6 @@ import (
 	"github.com/opencurve/curve/tools-v2/pkg/output"
 	"github.com/opencurve/curve/tools-v2/proto/proto/nameserver2"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"log"
@@ -162,11 +161,9 @@ func (pCmd *DirCommand) RunCommand(cmd *cobra.Command, args []string) error {
 	}
 	var errors []*cmderror.CmdError
 	rows := make([]map[string]string, 0)
-	log.Println("-------")
 	for _, res := range results {
 		infos := res.(*nameserver2.ListDirResponse).GetFileInfo()
 		for _, info := range infos {
-			log.Println(info)
 			row := make(map[string]string)
 			dirName := config.GetBsFlagString(pCmd.Cmd, config.CURVEBS_DIR)
 			var fileName string
@@ -175,37 +172,31 @@ func (pCmd *DirCommand) RunCommand(cmd *cobra.Command, args []string) error {
 			} else {
 				fileName = dirName + "/" + info.GetFileName()
 			}
-			row[cobrautil.ROW_PARENT_ID] = fmt.Sprintf("%v", info.GetParentId())
+			row[cobrautil.ROW_ID] = fmt.Sprintf("%d", info.GetId())
+			row[cobrautil.ROW_FILE_NAME] = fileName
+			row[cobrautil.ROW_PARENT_ID] = fmt.Sprintf("%d", info.GetParentId())
 			row[cobrautil.ROW_FILE_TYPE] = fmt.Sprintf("%v", info.GetFileType())
 			row[cobrautil.ROW_OWNER] = info.GetOwner()
 			row[cobrautil.ROW_CTIME] = time.Unix(int64(info.GetCtime()/1000000), 0).Format("2006-01-02 15:04:05")
-			// Get file size
-			// 加上path
+
+			// generate a query file command
 			fInfoCmd := file.NewQueryFileCommand()
-			//fInfoCmd := *pCmd.Cmd
-			//config.AddBsPathRequiredFlag(&fInfoCmd)
 			config.AlignFlagsValue(pCmd.Cmd, fInfoCmd.Cmd, []string{
 				config.RPCRETRYTIMES, config.RPCTIMEOUT, config.CURVEBS_MDSADDR,
 				config.CURVEBS_PATH,
 			})
 			fInfoCmd.Cmd.Flags().Set("path", fileName)
 
-			fInfoCmd.Cmd.Flags().VisitAll(func(flag *pflag.Flag) {
-				log.Println(flag.Name)
-				log.Println(flag.Value)
-			})
-			log.Println("-----")
+			// Get file size
 			sizeRes, err := file.GetFileSize(fInfoCmd.Cmd)
 			if err.TypeCode() != cmderror.CODE_SUCCESS {
-				//log.Printf("%s failed to get file size: %v", info.GetFileName(), err)
-				return err.ToError()
+				log.Printf("%s failed to get file size: %v", info.GetFileName(), err)
 			}
 			row[cobrautil.ROW_FILE_SIZE] = fmt.Sprintf("%d GB", sizeRes.GetFileSize())
 			// Get allocated size
 			allocRes, err := file.GetAllocatedSize(fInfoCmd.Cmd)
 			if err.TypeCode() != cmderror.CODE_SUCCESS {
-				//log.Printf("%s failed to get allocated size: %v", info.GetFileName(), err)
-				return err.ToError()
+				log.Printf("%s failed to get allocated size: %v", info.GetFileName(), err)
 			}
 			row[cobrautil.ROW_ALLOC_SIZE] = fmt.Sprintf("%d GB", allocRes.GetAllocatedSize())
 			rows = append(rows, row)
