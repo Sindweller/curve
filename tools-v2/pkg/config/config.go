@@ -137,6 +137,7 @@ func AddShowErrorPFlag(cmd *cobra.Command) {
 func AlignFlagsValue(caller *cobra.Command, callee *cobra.Command, flagNames []string) {
 	callee.Flags().VisitAll(func(flag *pflag.Flag) {
 		index := slices.IndexFunc(flagNames, func(i string) bool {
+			log.Println(flag.Name)
 			return flag.Name == i
 		})
 		log.Println(index)
@@ -145,7 +146,7 @@ func AlignFlagsValue(caller *cobra.Command, callee *cobra.Command, flagNames []s
 		}
 		log.Println(flag.Name)
 		callerFlag := caller.Flag(flag.Name)
-		log.Println(callerFlag.Value)
+		//log.Println(callerFlag.Value)
 		if callerFlag != nil && callerFlag.Changed {
 			if flag.Value.Type() == callerFlag.Value.Type() {
 				flag.Value = callerFlag.Value
