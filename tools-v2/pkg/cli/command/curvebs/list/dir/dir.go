@@ -32,6 +32,7 @@ import (
 	"github.com/opencurve/curve/tools-v2/pkg/output"
 	"github.com/opencurve/curve/tools-v2/proto/proto/nameserver2"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"log"
 )
@@ -87,6 +88,7 @@ func (pCmd *DirCommand) AddFlags() {
 	config.AddRpcTimeoutFlag(pCmd.Cmd)
 	config.AddBsDirOptionFlag(pCmd.Cmd)
 	config.AddBsUserOptionFlag(pCmd.Cmd)
+	config.AddBsPasswordOptionFlag(pCmd.Cmd)
 }
 
 // Init implements basecmd.FinalCurveCmdFunc
@@ -104,6 +106,7 @@ func (pCmd *DirCommand) Init(cmd *cobra.Command, args []string) error {
 	if errDat.TypeCode() != cmderror.CODE_SUCCESS {
 		return errDat.ToError()
 	}
+
 	rpc := &ListDirRpc{
 		Request: &nameserver2.ListDirRequest{
 			FileName: &fileName,
@@ -111,6 +114,12 @@ func (pCmd *DirCommand) Init(cmd *cobra.Command, args []string) error {
 			Date:     &date,
 		},
 		Info: basecmd.NewRpc(mdsAddrs, timeout, retrytimes, "ListDir"),
+	}
+	password := config.GetBsFlagString(pCmd.Cmd, config.CURVEBS_PASSWORD)
+	if owner == viper.GetString(config.VIPER_CURVEBS_USER) && len(password) != 0 {
+		strSig := cobrautil.GetString2Signature(date, owner)
+		sig := cobrautil.CalcString2Signature(strSig, password)
+		rpc.Request.Signature = &sig
 	}
 	pCmd.Rpc = append(pCmd.Rpc, rpc)
 	header := []string{
