@@ -133,6 +133,7 @@ func GetFileSize(caller *cobra.Command) (*nameserver2.GetFileSizeResponse, *cmde
 
 	log.Println(getCmd.Cmd)
 	getCmd.Cmd.SetArgs([]string{"--format", config.FORMAT_NOOUT})
+	getCmd.Cmd.SetArgs([]string{"--path", "/RecycleBin"})
 	log.Println(getCmd.Cmd.Flag("path"))
 	err := getCmd.Cmd.Execute()
 	if err != nil {
