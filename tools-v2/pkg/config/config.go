@@ -22,6 +22,7 @@
 package config
 
 import (
+	"log"
 	"os"
 	"time"
 
@@ -143,6 +144,8 @@ func AlignFlagsValue(caller *cobra.Command, callee *cobra.Command, flagNames []s
 		}
 		callerFlag := caller.Flag(flag.Name)
 		if callerFlag != nil && callerFlag.Changed {
+			log.Println(callerFlag.Name)
+			log.Println(callerFlag.Value)
 			if flag.Value.Type() == callerFlag.Value.Type() {
 				flag.Value = callerFlag.Value
 				flag.Changed = callerFlag.Changed
