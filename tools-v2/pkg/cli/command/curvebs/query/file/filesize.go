@@ -24,8 +24,6 @@ package file
 
 import (
 	"context"
-	"log"
-
 	cmderror "github.com/opencurve/curve/tools-v2/internal/error"
 	basecmd "github.com/opencurve/curve/tools-v2/pkg/cli/command"
 	"github.com/opencurve/curve/tools-v2/pkg/config"
@@ -121,9 +119,6 @@ func (gCmd *GetFileSizeCommand) ResultPlainOutput() error {
 
 func GetFileSize(caller *cobra.Command) (*nameserver2.GetFileSizeResponse, *cmderror.CmdError) {
 	getCmd := NewGetFileSizeCommand()
-	log.Println(caller.Flag("path"))
-	getCmd.Cmd.SetArgs([]string{"--path", "/RecycleBin"})
-	log.Println(caller.Flag("path"))
 	config.AlignFlagsValue(caller, getCmd.Cmd, []string{
 		config.RPCRETRYTIMES, config.RPCTIMEOUT, config.CURVEBS_MDSADDR,
 		config.CURVEBS_PATH,
@@ -131,10 +126,7 @@ func GetFileSize(caller *cobra.Command) (*nameserver2.GetFileSizeResponse, *cmde
 	getCmd.Cmd.SilenceErrors = true
 	getCmd.Cmd.SilenceUsage = true
 
-	log.Println(getCmd.Cmd)
 	getCmd.Cmd.SetArgs([]string{"--format", config.FORMAT_NOOUT})
-	getCmd.Cmd.SetArgs([]string{"--path", "/RecycleBin"})
-	log.Println(getCmd.Cmd.Flag("path"))
 	err := getCmd.Cmd.Execute()
 	if err != nil {
 		retErr := cmderror.ErrBsGetFileInfo()

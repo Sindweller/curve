@@ -22,7 +22,6 @@
 package config
 
 import (
-	"log"
 	"os"
 	"time"
 
@@ -136,17 +135,13 @@ func AddShowErrorPFlag(cmd *cobra.Command) {
 // Align the flag (changed) in the caller with the callee
 func AlignFlagsValue(caller *cobra.Command, callee *cobra.Command, flagNames []string) {
 	callee.Flags().VisitAll(func(flag *pflag.Flag) {
-		log.Println(flag.Name)
-		log.Println(flag.Value)
 		index := slices.IndexFunc(flagNames, func(i string) bool {
 			return flag.Name == i
 		})
-		log.Println(index)
 		if index == -1 {
 			return
 		}
 		callerFlag := caller.Flag(flag.Name)
-		//log.Println(callerFlag.Value)
 		if callerFlag != nil && callerFlag.Changed {
 			if flag.Value.Type() == callerFlag.Value.Type() {
 				flag.Value = callerFlag.Value
