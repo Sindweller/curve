@@ -34,11 +34,10 @@ import (
 	"github.com/opencurve/curve/tools-v2/proto/proto/nameserver2"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
-	"log"
 )
 
 const (
-	dirExample = `$ curve bs list dir -fileName=/test`
+	dirExample = `$ curve bs list dir --dir /test`
 )
 
 type ListDirRpc struct {
@@ -168,13 +167,15 @@ func (pCmd *DirCommand) RunCommand(cmd *cobra.Command, args []string) error {
 			// Get file size
 			sizeRes, err := file.GetFileSize(pCmd.Cmd)
 			if err.TypeCode() != cmderror.CODE_SUCCESS {
-				log.Printf("%s failed to get file size: %v", info.GetFileName(), err)
+				//log.Printf("%s failed to get file size: %v", info.GetFileName(), err)
+				return err.ToError()
 			}
 			row[cobrautil.ROW_FILE_SIZE] = string(sizeRes.GetFileSize())
 			// Get allocated size
 			allocRes, err := file.GetAllocatedSize(pCmd.Cmd)
 			if err.TypeCode() != cmderror.CODE_SUCCESS {
-				log.Printf("%s failed to get allocated size: %v", info.GetFileName(), err)
+				//log.Printf("%s failed to get allocated size: %v", info.GetFileName(), err)
+				return err.ToError()
 			}
 			row[cobrautil.ROW_ALLOC_SIZE] = string(allocRes.GetAllocatedSize())
 			rows = append(rows, row)
