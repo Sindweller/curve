@@ -115,6 +115,7 @@ func (pCmd *DirCommand) Init(cmd *cobra.Command, args []string) error {
 		},
 		Info: basecmd.NewRpc(mdsAddrs, timeout, retrytimes, "ListDir"),
 	}
+	// auth
 	password := config.GetBsFlagString(pCmd.Cmd, config.CURVEBS_PASSWORD)
 	if owner == viper.GetString(config.VIPER_CURVEBS_USER) && len(password) != 0 {
 		strSig := cobrautil.GetString2Signature(date, owner)
@@ -175,8 +176,15 @@ func (pCmd *DirCommand) RunCommand(cmd *cobra.Command, args []string) error {
 			row[cobrautil.ROW_FILE_TYPE] = string(info.GetFileType())
 			row[cobrautil.ROW_OWNER] = info.GetOwner()
 			row[cobrautil.ROW_CTIME] = string(info.GetCtime())
+			log.Println("+++get file size+++")
 			// Get file size
-			sizeRes, err := file.GetFileSize(pCmd.Cmd)
+			// 加上path
+			fInfoCmd := pCmd.Cmd
+			fInfoCmd.SetArgs([]string{"--path", row[cobrautil.ROW_FILE_NAME]})
+			log.Println(row[cobrautil.ROW_FILE_NAME])
+			log.Println(fInfoCmd)
+			log.Println("+++++")
+			sizeRes, err := file.GetFileSize(fInfoCmd)
 			if err.TypeCode() != cmderror.CODE_SUCCESS {
 				//log.Printf("%s failed to get file size: %v", info.GetFileName(), err)
 				return err.ToError()
@@ -184,7 +192,7 @@ func (pCmd *DirCommand) RunCommand(cmd *cobra.Command, args []string) error {
 			row[cobrautil.ROW_FILE_SIZE] = string(sizeRes.GetFileSize())
 			log.Println(sizeRes.GetFileSize())
 			// Get allocated size
-			allocRes, err := file.GetAllocatedSize(pCmd.Cmd)
+			allocRes, err := file.GetAllocatedSize(fInfoCmd)
 			if err.TypeCode() != cmderror.CODE_SUCCESS {
 				//log.Printf("%s failed to get allocated size: %v", info.GetFileName(), err)
 				return err.ToError()
