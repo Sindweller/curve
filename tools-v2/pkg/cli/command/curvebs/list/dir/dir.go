@@ -32,7 +32,6 @@ import (
 	"github.com/opencurve/curve/tools-v2/pkg/output"
 	"github.com/opencurve/curve/tools-v2/proto/proto/nameserver2"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"log"
@@ -159,67 +158,63 @@ func (pCmd *DirCommand) RunCommand(cmd *cobra.Command, args []string) error {
 		return mergeErr.ToError()
 	}
 	var errors []*cmderror.CmdError
-	rows := make([]map[string]string, 0)
+	rows := make([]map[string]interface{}, 0)
 	log.Println("-------")
 	for _, res := range results {
 		infos := res.(*nameserver2.ListDirResponse).GetFileInfo()
 		for _, info := range infos {
 			log.Println(info)
-			row := make(map[string]string)
+			row := make(map[string]interface{})
 			dirName := config.GetBsFlagString(pCmd.Cmd, config.CURVEBS_DIR)
-			log.Println(dirName)
+			var fileName string
 			if dirName == "/" {
-				row[cobrautil.ROW_FILE_NAME] = dirName + info.GetFileName()
+				fileName = dirName + info.GetFileName()
 			} else {
-				row[cobrautil.ROW_FILE_NAME] = dirName + "/" + info.GetFileName()
+				fileName = dirName + "/" + info.GetFileName()
 			}
-			row[cobrautil.ROW_PARENT_ID] = string(info.GetParentId())
-			row[cobrautil.ROW_FILE_TYPE] = string(info.GetFileType())
-			row[cobrautil.ROW_OWNER] = info.GetOwner()
-			row[cobrautil.ROW_CTIME] = string(info.GetCtime())
+			//row[cobrautil.ROW_PARENT_ID] = string(info.GetParentId())
+			//row[cobrautil.ROW_FILE_TYPE] = string(info.GetFileType())
+			//row[cobrautil.ROW_OWNER] = info.GetOwner()
+			//row[cobrautil.ROW_CTIME] = string(info.GetCtime())
 			// Get file size
 			// 加上path
-			fInfoCmd := file.NewQueryFileCommand()
+			row, err := file.GetFile(pCmd.Cmd, fileName)
 			//fInfoCmd := *pCmd.Cmd
 			//config.AddBsPathRequiredFlag(&fInfoCmd)
-			config.AlignFlagsValue(pCmd.Cmd, fInfoCmd.Cmd, []string{
-				config.RPCRETRYTIMES, config.RPCTIMEOUT, config.CURVEBS_MDSADDR,
-				config.CURVEBS_PATH,
-			})
-			fInfoCmd.Cmd.Flags().Set("path", row[cobrautil.ROW_FILE_NAME])
-
-			fInfoCmd.Cmd.Flags().VisitAll(func(flag *pflag.Flag) {
-				log.Println(flag.Name)
-				log.Println(flag.Value)
-			})
-			log.Println("-----")
-			sizeRes, err := file.GetFileSize(fInfoCmd.Cmd)
-			if err.TypeCode() != cmderror.CODE_SUCCESS {
-				//log.Printf("%s failed to get file size: %v", info.GetFileName(), err)
-				return err.ToError()
-			}
-			row[cobrautil.ROW_FILE_SIZE] = string(sizeRes.GetFileSize())
-			log.Println(sizeRes.GetFileSize())
-			// Get allocated size
-			log.Println("++++++")
-			allocRes, err := file.GetAllocatedSize(fInfoCmd.Cmd)
+			//config.AlignFlagsValue(pCmd.Cmd, fInfoCmd.Cmd, []string{
+			//	config.RPCRETRYTIMES, config.RPCTIMEOUT, config.CURVEBS_MDSADDR,
+			//	config.CURVEBS_PATH,
+			//})
+			//fInfoCmd.Cmd.Flags().Set("path", row[cobrautil.ROW_FILE_NAME])
+			//
+			//fInfoCmd.Cmd.Flags().VisitAll(func(flag *pflag.Flag) {
+			//	log.Println(flag.Name)
+			//	log.Println(flag.Value)
+			//})
+			//log.Println("-----")
+			//sizeRes, err := file.GetFileSize(fInfoCmd.Cmd)
+			//if err.TypeCode() != cmderror.CODE_SUCCESS {
+			//	//log.Printf("%s failed to get file size: %v", info.GetFileName(), err)
+			//	return err.ToError()
+			//}
+			//row[cobrautil.ROW_FILE_SIZE] = string(sizeRes.GetFileSize())
+			//// Get allocated size
+			//allocRes, err := file.GetAllocatedSize(fInfoCmd.Cmd)
 			if err.TypeCode() != cmderror.CODE_SUCCESS {
 				//log.Printf("%s failed to get allocated size: %v", info.GetFileName(), err)
 				return err.ToError()
 			}
-			log.Println(allocRes.GetAllocatedSize())
-			row[cobrautil.ROW_ALLOC_SIZE] = string(allocRes.GetAllocatedSize())
-			log.Println(row)
+			//row[cobrautil.ROW_ALLOC_SIZE] = string(allocRes.GetAllocatedSize())
 			rows = append(rows, row)
 		}
 	}
-	list := cobrautil.ListMap2ListSortByKeys(rows, pCmd.Header, []string{
-		cobrautil.ROW_FILE_NAME,
-	})
-	pCmd.TableNew.AppendBulk(list)
+	//list := cobrautil.ListMap2ListSortByKeys(rows, pCmd.Header, []string{
+	//	cobrautil.ROW_FILE_NAME,
+	//})
+	//pCmd.TableNew.AppendBulk(rows)
 	errRet := cmderror.MergeCmdError(errors)
 	pCmd.Error = &errRet
-	pCmd.Result = results
+	pCmd.Result = rows
 	log.Println(pCmd.Result)
 	return nil
 }

@@ -179,7 +179,7 @@ func updateByAllocSize(data *map[string]string, header *[]string, allocSize *nam
 }
 
 func updateByFileSize(data *map[string]string, header *[]string, size *nameserver2.GetFileSizeResponse) {
-	if 	size != nil && size.FileSize != nil {
+	if size != nil && size.FileSize != nil {
 		name := cobrautil.ROW_SIZE
 		message := fmt.Sprintf("size:%s", humanize.IBytes(size.GetFileSize()))
 		(*data)[name] = message
@@ -197,16 +197,30 @@ func (fCmd *FileCommand) RunCommand(cmd *cobra.Command, args []string) error {
 	list := cobrautil.Map2List(data, header)
 	fCmd.TableNew.Append(list)
 	fCmd.Result = map[string]interface{}{
-		"info": fCmd.fileInfo,
+		"info":  fCmd.fileInfo,
 		"alloc": fCmd.allocSize,
 	}
 	if fCmd.fileSize != nil {
 		fCmd.Result.(map[string]interface{})["size"] = fCmd.fileSize
 	}
-	
+
 	return nil
 }
 
 func (fCmd *FileCommand) ResultPlainOutput() error {
 	return output.FinalCmdOutputPlain(&fCmd.FinalCurveCmd)
+}
+
+func GetFile(caller *cobra.Command, fileName string) (map[string]interface{}, *cmderror.CmdError) {
+	getCmd := NewGetFileInfoCommand()
+	config.AlignFlagsValue(caller, getCmd.Cmd, []string{
+		config.RPCRETRYTIMES, config.RPCTIMEOUT, config.CURVEBS_MDSADDR,
+		config.CURVEBS_PATH, config.CURVEBS_USER, config.CURVEBS_PASSWORD,
+	})
+	getCmd.Cmd.SilenceErrors = true
+	getCmd.Cmd.SilenceUsage = true
+	getCmd.Cmd.SetArgs([]string{"--format", config.FORMAT_NOOUT})
+	getCmd.Cmd.Flags().Set("path", fileName)
+	getCmd.RunCommand(getCmd.Cmd, []string{})
+	return getCmd.Result.(map[string]interface{}), getCmd.Error
 }
