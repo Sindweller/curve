@@ -24,6 +24,7 @@ package dir
 
 import (
 	"context"
+	"fmt"
 	cmderror "github.com/opencurve/curve/tools-v2/internal/error"
 	cobrautil "github.com/opencurve/curve/tools-v2/internal/utils"
 	basecmd "github.com/opencurve/curve/tools-v2/pkg/cli/command"
@@ -32,9 +33,11 @@ import (
 	"github.com/opencurve/curve/tools-v2/pkg/output"
 	"github.com/opencurve/curve/tools-v2/proto/proto/nameserver2"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"log"
+	"time"
 )
 
 const (
@@ -158,13 +161,13 @@ func (pCmd *DirCommand) RunCommand(cmd *cobra.Command, args []string) error {
 		return mergeErr.ToError()
 	}
 	var errors []*cmderror.CmdError
-	rows := make([]map[string]interface{}, 0)
+	rows := make([]map[string]string, 0)
 	log.Println("-------")
 	for _, res := range results {
 		infos := res.(*nameserver2.ListDirResponse).GetFileInfo()
 		for _, info := range infos {
 			log.Println(info)
-			row := make(map[string]interface{})
+			row := make(map[string]string)
 			dirName := config.GetBsFlagString(pCmd.Cmd, config.CURVEBS_DIR)
 			var fileName string
 			if dirName == "/" {
@@ -172,49 +175,49 @@ func (pCmd *DirCommand) RunCommand(cmd *cobra.Command, args []string) error {
 			} else {
 				fileName = dirName + "/" + info.GetFileName()
 			}
-			//row[cobrautil.ROW_PARENT_ID] = string(info.GetParentId())
-			//row[cobrautil.ROW_FILE_TYPE] = string(info.GetFileType())
-			//row[cobrautil.ROW_OWNER] = info.GetOwner()
-			//row[cobrautil.ROW_CTIME] = string(info.GetCtime())
+			row[cobrautil.ROW_PARENT_ID] = fmt.Sprintf("%v", info.GetParentId())
+			row[cobrautil.ROW_FILE_TYPE] = fmt.Sprintf("%v", info.GetFileType())
+			row[cobrautil.ROW_OWNER] = info.GetOwner()
+			row[cobrautil.ROW_CTIME] = time.Unix(int64(info.GetCtime()/1000000), 0).Format("2006-01-02 15:04:05")
 			// Get file size
 			// 加上path
-			row, err := file.GetFile(pCmd.Cmd, fileName)
+			fInfoCmd := file.NewQueryFileCommand()
 			//fInfoCmd := *pCmd.Cmd
 			//config.AddBsPathRequiredFlag(&fInfoCmd)
-			//config.AlignFlagsValue(pCmd.Cmd, fInfoCmd.Cmd, []string{
-			//	config.RPCRETRYTIMES, config.RPCTIMEOUT, config.CURVEBS_MDSADDR,
-			//	config.CURVEBS_PATH,
-			//})
-			//fInfoCmd.Cmd.Flags().Set("path", row[cobrautil.ROW_FILE_NAME])
-			//
-			//fInfoCmd.Cmd.Flags().VisitAll(func(flag *pflag.Flag) {
-			//	log.Println(flag.Name)
-			//	log.Println(flag.Value)
-			//})
-			//log.Println("-----")
-			//sizeRes, err := file.GetFileSize(fInfoCmd.Cmd)
-			//if err.TypeCode() != cmderror.CODE_SUCCESS {
-			//	//log.Printf("%s failed to get file size: %v", info.GetFileName(), err)
-			//	return err.ToError()
-			//}
-			//row[cobrautil.ROW_FILE_SIZE] = string(sizeRes.GetFileSize())
-			//// Get allocated size
-			//allocRes, err := file.GetAllocatedSize(fInfoCmd.Cmd)
+			config.AlignFlagsValue(pCmd.Cmd, fInfoCmd.Cmd, []string{
+				config.RPCRETRYTIMES, config.RPCTIMEOUT, config.CURVEBS_MDSADDR,
+				config.CURVEBS_PATH,
+			})
+			fInfoCmd.Cmd.Flags().Set("path", fileName)
+
+			fInfoCmd.Cmd.Flags().VisitAll(func(flag *pflag.Flag) {
+				log.Println(flag.Name)
+				log.Println(flag.Value)
+			})
+			log.Println("-----")
+			sizeRes, err := file.GetFileSize(fInfoCmd.Cmd)
+			if err.TypeCode() != cmderror.CODE_SUCCESS {
+				//log.Printf("%s failed to get file size: %v", info.GetFileName(), err)
+				return err.ToError()
+			}
+			row[cobrautil.ROW_FILE_SIZE] = fmt.Sprintf("%d GB", sizeRes.GetFileSize())
+			// Get allocated size
+			allocRes, err := file.GetAllocatedSize(fInfoCmd.Cmd)
 			if err.TypeCode() != cmderror.CODE_SUCCESS {
 				//log.Printf("%s failed to get allocated size: %v", info.GetFileName(), err)
 				return err.ToError()
 			}
-			//row[cobrautil.ROW_ALLOC_SIZE] = string(allocRes.GetAllocatedSize())
+			row[cobrautil.ROW_ALLOC_SIZE] = fmt.Sprintf("%d GB", allocRes.GetAllocatedSize())
 			rows = append(rows, row)
 		}
 	}
-	//list := cobrautil.ListMap2ListSortByKeys(rows, pCmd.Header, []string{
-	//	cobrautil.ROW_FILE_NAME,
-	//})
-	//pCmd.TableNew.AppendBulk(rows)
+	list := cobrautil.ListMap2ListSortByKeys(rows, pCmd.Header, []string{
+		cobrautil.ROW_FILE_NAME,
+	})
+	pCmd.TableNew.AppendBulk(list)
 	errRet := cmderror.MergeCmdError(errors)
 	pCmd.Error = &errRet
-	pCmd.Result = rows
+	pCmd.Result = results
 	log.Println(pCmd.Result)
 	return nil
 }
