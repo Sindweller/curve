@@ -180,7 +180,7 @@ func (pCmd *DirCommand) RunCommand(cmd *cobra.Command, args []string) error {
 			// Get file size
 			// 加上path
 			fInfoCmd := pCmd.Cmd
-			fInfoCmd.SetArgs([]string{"--path", row[cobrautil.ROW_FILE_NAME]})
+			fInfoCmd.SetArgs([]string{"path", row[cobrautil.ROW_FILE_NAME]})
 			log.Println(row[cobrautil.ROW_FILE_NAME])
 			log.Println(fInfoCmd)
 			log.Println("+++++")
