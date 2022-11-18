@@ -25,6 +25,7 @@ package cobrautil
 const (
 	ROW_ADDR            = "addr"
 	ROW_ALLOC           = "alloc"
+	ROW_ALLOC_SIZE      = "allocatedSize"
 	ROW_BLOCKSIZE       = "blocksize"
 	ROW_CAPACITY        = "capacity"
 	ROW_CHILD_LIST      = "childList"

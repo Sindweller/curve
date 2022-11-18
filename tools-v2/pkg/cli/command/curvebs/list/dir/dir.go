@@ -28,11 +28,13 @@ import (
 	cmderror "github.com/opencurve/curve/tools-v2/internal/error"
 	cobrautil "github.com/opencurve/curve/tools-v2/internal/utils"
 	basecmd "github.com/opencurve/curve/tools-v2/pkg/cli/command"
+	"github.com/opencurve/curve/tools-v2/pkg/cli/command/curvebs/query/file"
 	"github.com/opencurve/curve/tools-v2/pkg/config"
 	"github.com/opencurve/curve/tools-v2/pkg/output"
 	"github.com/opencurve/curve/tools-v2/proto/proto/nameserver2"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
+	"log"
 )
 
 const (
@@ -105,7 +107,15 @@ func (pCmd *DirCommand) Init(cmd *cobra.Command, args []string) error {
 		Info: basecmd.NewRpc(mdsAddrs, timeout, retrytimes, "ListDir"),
 	}
 	pCmd.Rpc = append(pCmd.Rpc, rpc)
-	header := []string{cobrautil.ROW_IP, cobrautil.ROW_PORT}
+	header := []string{
+		cobrautil.ROW_FILE_NAME,
+		cobrautil.ROW_PARENT_ID,
+		cobrautil.ROW_FILE_TYPE,
+		cobrautil.ROW_OWNER,
+		cobrautil.ROW_CTIME,
+		cobrautil.ROW_ALLOC_SIZE,
+		cobrautil.ROW_FILE_SIZE,
+	}
 	pCmd.SetHeader(header)
 	pCmd.TableNew.SetAutoMergeCellsByColumnIndex(cobrautil.GetIndexSlice(
 		pCmd.Header, header,
@@ -138,12 +148,28 @@ func (pCmd *DirCommand) RunCommand(cmd *cobra.Command, args []string) error {
 		for _, info := range infos {
 			fmt.Println(info)
 			row := make(map[string]string)
-			row[cobrautil.ROW_FILE_NAME] = info.GetFileName()
+			dirName := config.GetBsFlagString(pCmd.Cmd, config.CURVEBS_DIR)
+			if dirName == "/" {
+				row[cobrautil.ROW_FILE_NAME] = dirName + info.GetFileName()
+			} else {
+				row[cobrautil.ROW_FILE_NAME] = dirName + "/" + info.GetFileName()
+			}
 			row[cobrautil.ROW_PARENT_ID] = string(info.GetParentId())
-			// TODO 修改计算size的方式
 			row[cobrautil.ROW_FILE_TYPE] = string(info.GetFileType())
 			row[cobrautil.ROW_OWNER] = info.GetOwner()
 			row[cobrautil.ROW_CTIME] = string(info.GetCtime())
+			// Get file size
+			sizeRes, err := file.GetFileSize(pCmd.Cmd)
+			if err.TypeCode() != cmderror.CODE_SUCCESS {
+				log.Printf("%s failed to get file size: %v", info.GetFileName(), err)
+			}
+			row[cobrautil.ROW_FILE_SIZE] = string(sizeRes.GetFileSize())
+			// Get allocated size
+			allocRes, err := file.GetAllocatedSize(pCmd.Cmd)
+			if err.TypeCode() != cmderror.CODE_SUCCESS {
+				log.Printf("%s failed to get allocated size: %v", info.GetFileName(), err)
+			}
+			row[cobrautil.ROW_ALLOC_SIZE] = string(allocRes.GetAllocatedSize())
 			rows = append(rows, row)
 		}
 	}
