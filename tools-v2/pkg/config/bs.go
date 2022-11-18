@@ -47,7 +47,7 @@ const (
 	CURVEBS_PASSWORD           = "password"
 	VIPER_CURVEBS_PASSWORD     = "curvebs.root.password"
 	CURVEBS_DEFAULT_PASSWORD   = "root_password"
-	CURVEBS_FILENAME           = "fileName"
+	CURVEBS_DIR                = "dir"
 )
 
 var (
@@ -127,9 +127,9 @@ func AddBsPasswordOptionFlag(cmd *cobra.Command) {
 	AddBsStringOptionFlag(cmd, CURVEBS_PASSWORD, "user password")
 }
 
-// fileName
-func AddBsFileNameOptionFlag(cmd *cobra.Command) {
-	AddBsStringOptionFlag(cmd, CURVEBS_FILENAME, "file name")
+// dir
+func AddBsDirOptionFlag(cmd *cobra.Command) {
+	AddBsStringOptionFlag(cmd, CURVEBS_DIR, "dir")
 }
 
 // etcd

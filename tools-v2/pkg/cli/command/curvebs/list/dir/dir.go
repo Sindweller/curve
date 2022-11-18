@@ -24,6 +24,7 @@ package dir
 
 import (
 	"context"
+	"fmt"
 	cmderror "github.com/opencurve/curve/tools-v2/internal/error"
 	cobrautil "github.com/opencurve/curve/tools-v2/internal/utils"
 	basecmd "github.com/opencurve/curve/tools-v2/pkg/cli/command"
@@ -83,7 +84,7 @@ func (pCmd *DirCommand) AddFlags() {
 	config.AddBsMdsFlagOption(pCmd.Cmd)
 	config.AddRpcRetryTimesFlag(pCmd.Cmd)
 	config.AddRpcTimeoutFlag(pCmd.Cmd)
-	config.AddBsFileNameOptionFlag(pCmd.Cmd)
+	config.AddBsDirOptionFlag(pCmd.Cmd)
 }
 
 // Init implements basecmd.FinalCurveCmdFunc
@@ -95,7 +96,7 @@ func (pCmd *DirCommand) Init(cmd *cobra.Command, args []string) error {
 
 	timeout := config.GetFlagDuration(pCmd.Cmd, config.RPCTIMEOUT)
 	retrytimes := config.GetFlagInt32(pCmd.Cmd, config.RPCRETRYTIMES)
-	fileName := config.GetBsFlagString(pCmd.Cmd, config.CURVEBS_FILENAME)
+	fileName := config.GetBsFlagString(pCmd.Cmd, config.CURVEBS_DIR)
 
 	rpc := &ListDirRpc{
 		Request: &nameserver2.ListDirRequest{
@@ -104,7 +105,6 @@ func (pCmd *DirCommand) Init(cmd *cobra.Command, args []string) error {
 		Info: basecmd.NewRpc(mdsAddrs, timeout, retrytimes, "ListDir"),
 	}
 	pCmd.Rpc = append(pCmd.Rpc, rpc)
-
 	header := []string{cobrautil.ROW_IP, cobrautil.ROW_PORT}
 	pCmd.SetHeader(header)
 	pCmd.TableNew.SetAutoMergeCellsByColumnIndex(cobrautil.GetIndexSlice(
@@ -136,6 +136,7 @@ func (pCmd *DirCommand) RunCommand(cmd *cobra.Command, args []string) error {
 	for _, res := range results {
 		infos := res.(*nameserver2.ListDirResponse).GetFileInfo()
 		for _, info := range infos {
+			fmt.Println(info)
 			row := make(map[string]string)
 			row[cobrautil.ROW_FILE_NAME] = info.GetFileName()
 			row[cobrautil.ROW_PARENT_ID] = string(info.GetParentId())
@@ -147,7 +148,7 @@ func (pCmd *DirCommand) RunCommand(cmd *cobra.Command, args []string) error {
 		}
 	}
 	list := cobrautil.ListMap2ListSortByKeys(rows, pCmd.Header, []string{
-		cobrautil.ROW_FS_NAME,
+		cobrautil.ROW_FILE_NAME,
 	})
 	pCmd.TableNew.AppendBulk(list)
 	errRet := cmderror.MergeCmdError(errors)
