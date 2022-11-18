@@ -192,6 +192,7 @@ func (pCmd *DirCommand) RunCommand(cmd *cobra.Command, args []string) error {
 			row[cobrautil.ROW_FILE_SIZE] = string(sizeRes.GetFileSize())
 			log.Println(sizeRes.GetFileSize())
 			// Get allocated size
+			log.Println("++++++")
 			allocRes, err := file.GetAllocatedSize(fInfoCmd)
 			if err.TypeCode() != cmderror.CODE_SUCCESS {
 				//log.Printf("%s failed to get allocated size: %v", info.GetFileName(), err)
