@@ -24,7 +24,6 @@ package dir
 
 import (
 	"context"
-	"fmt"
 	cmderror "github.com/opencurve/curve/tools-v2/internal/error"
 	cobrautil "github.com/opencurve/curve/tools-v2/internal/utils"
 	basecmd "github.com/opencurve/curve/tools-v2/pkg/cli/command"
@@ -34,6 +33,7 @@ import (
 	"github.com/opencurve/curve/tools-v2/proto/proto/nameserver2"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
+	"log"
 )
 
 const (
@@ -149,12 +149,14 @@ func (pCmd *DirCommand) RunCommand(cmd *cobra.Command, args []string) error {
 	}
 	var errors []*cmderror.CmdError
 	rows := make([]map[string]string, 0)
+	log.Println("-------")
 	for _, res := range results {
 		infos := res.(*nameserver2.ListDirResponse).GetFileInfo()
 		for _, info := range infos {
-			fmt.Println(info)
+			log.Println(info)
 			row := make(map[string]string)
 			dirName := config.GetBsFlagString(pCmd.Cmd, config.CURVEBS_DIR)
+			log.Println(dirName)
 			if dirName == "/" {
 				row[cobrautil.ROW_FILE_NAME] = dirName + info.GetFileName()
 			} else {
@@ -171,13 +173,16 @@ func (pCmd *DirCommand) RunCommand(cmd *cobra.Command, args []string) error {
 				return err.ToError()
 			}
 			row[cobrautil.ROW_FILE_SIZE] = string(sizeRes.GetFileSize())
+			log.Println(sizeRes.GetFileSize())
 			// Get allocated size
 			allocRes, err := file.GetAllocatedSize(pCmd.Cmd)
 			if err.TypeCode() != cmderror.CODE_SUCCESS {
 				//log.Printf("%s failed to get allocated size: %v", info.GetFileName(), err)
 				return err.ToError()
 			}
+			log.Println(allocRes.GetAllocatedSize())
 			row[cobrautil.ROW_ALLOC_SIZE] = string(allocRes.GetAllocatedSize())
+			log.Println(rows)
 			rows = append(rows, row)
 		}
 	}
@@ -188,6 +193,7 @@ func (pCmd *DirCommand) RunCommand(cmd *cobra.Command, args []string) error {
 	errRet := cmderror.MergeCmdError(errors)
 	pCmd.Error = &errRet
 	pCmd.Result = results
+	log.Println(pCmd.Result)
 	return nil
 }
 
