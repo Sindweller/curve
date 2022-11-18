@@ -179,16 +179,21 @@ func (pCmd *DirCommand) RunCommand(cmd *cobra.Command, args []string) error {
 			row[cobrautil.ROW_CTIME] = string(info.GetCtime())
 			// Get file size
 			// 加上path
-			//fInfoCmd := file.NewFileCommand()
-			fInfoCmd := *pCmd.Cmd
-			config.AddBsPathRequiredFlag(&fInfoCmd)
-			fInfoCmd.Flags().Set("path", row[cobrautil.ROW_FILE_NAME])
-			fInfoCmd.Flags().VisitAll(func(flag *pflag.Flag) {
+			fInfoCmd := file.NewQueryFileCommand()
+			//fInfoCmd := *pCmd.Cmd
+			//config.AddBsPathRequiredFlag(&fInfoCmd)
+			config.AlignFlagsValue(pCmd.Cmd, fInfoCmd.Cmd, []string{
+				config.RPCRETRYTIMES, config.RPCTIMEOUT, config.CURVEBS_MDSADDR,
+				config.CURVEBS_PATH,
+			})
+			fInfoCmd.Cmd.Flags().Set("path", row[cobrautil.ROW_FILE_NAME])
+
+			fInfoCmd.Cmd.Flags().VisitAll(func(flag *pflag.Flag) {
 				log.Println(flag.Name)
 				log.Println(flag.Value)
 			})
 			log.Println("-----")
-			sizeRes, err := file.GetFileSize(&fInfoCmd)
+			sizeRes, err := file.GetFileSize(fInfoCmd.Cmd)
 			if err.TypeCode() != cmderror.CODE_SUCCESS {
 				//log.Printf("%s failed to get file size: %v", info.GetFileName(), err)
 				return err.ToError()
@@ -197,14 +202,14 @@ func (pCmd *DirCommand) RunCommand(cmd *cobra.Command, args []string) error {
 			log.Println(sizeRes.GetFileSize())
 			// Get allocated size
 			log.Println("++++++")
-			allocRes, err := file.GetAllocatedSize(&fInfoCmd)
+			allocRes, err := file.GetAllocatedSize(fInfoCmd.Cmd)
 			if err.TypeCode() != cmderror.CODE_SUCCESS {
 				//log.Printf("%s failed to get allocated size: %v", info.GetFileName(), err)
 				return err.ToError()
 			}
 			log.Println(allocRes.GetAllocatedSize())
 			row[cobrautil.ROW_ALLOC_SIZE] = string(allocRes.GetAllocatedSize())
-			log.Println(rows)
+			log.Println(row)
 			rows = append(rows, row)
 		}
 	}
