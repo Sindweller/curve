@@ -25,6 +25,7 @@ package dir
 import (
 	"context"
 	"fmt"
+	"github.com/dustin/go-humanize"
 	cmderror "github.com/opencurve/curve/tools-v2/internal/error"
 	cobrautil "github.com/opencurve/curve/tools-v2/internal/utils"
 	basecmd "github.com/opencurve/curve/tools-v2/pkg/cli/command"
@@ -126,6 +127,7 @@ func (pCmd *DirCommand) Init(cmd *cobra.Command, args []string) error {
 	}
 	pCmd.Rpc = append(pCmd.Rpc, rpc)
 	header := []string{
+		cobrautil.ROW_ID,
 		cobrautil.ROW_FILE_NAME,
 		cobrautil.ROW_PARENT_ID,
 		cobrautil.ROW_FILE_TYPE,
@@ -192,13 +194,13 @@ func (pCmd *DirCommand) RunCommand(cmd *cobra.Command, args []string) error {
 			if err.TypeCode() != cmderror.CODE_SUCCESS {
 				log.Printf("%s failed to get file size: %v", info.GetFileName(), err)
 			}
-			row[cobrautil.ROW_FILE_SIZE] = fmt.Sprintf("%d GB", sizeRes.GetFileSize())
+			row[cobrautil.ROW_FILE_SIZE] = fmt.Sprintf("size:%s", humanize.IBytes(sizeRes.GetFileSize()))
 			// Get allocated size
 			allocRes, err := file.GetAllocatedSize(fInfoCmd.Cmd)
 			if err.TypeCode() != cmderror.CODE_SUCCESS {
 				log.Printf("%s failed to get allocated size: %v", info.GetFileName(), err)
 			}
-			row[cobrautil.ROW_ALLOC_SIZE] = fmt.Sprintf("%d GB", allocRes.GetAllocatedSize())
+			row[cobrautil.ROW_ALLOC_SIZE] = fmt.Sprintf("size:%s", humanize.IBytes(allocRes.GetAllocatedSize()))
 			rows = append(rows, row)
 		}
 	}
