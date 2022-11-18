@@ -176,12 +176,10 @@ func (pCmd *DirCommand) RunCommand(cmd *cobra.Command, args []string) error {
 			row[cobrautil.ROW_FILE_TYPE] = string(info.GetFileType())
 			row[cobrautil.ROW_OWNER] = info.GetOwner()
 			row[cobrautil.ROW_CTIME] = string(info.GetCtime())
-			log.Println("+++get file size+++")
 			// Get file size
 			// 加上path
 			fInfoCmd := pCmd.Cmd
-			fInfoCmd.Flags().String("path", row[cobrautil.ROW_FILE_NAME], "file path")
-			log.Println("+++++")
+			fInfoCmd.SetArgs([]string{"--path", row[cobrautil.ROW_FILE_NAME]})
 			sizeRes, err := file.GetFileSize(fInfoCmd)
 			if err.TypeCode() != cmderror.CODE_SUCCESS {
 				//log.Printf("%s failed to get file size: %v", info.GetFileName(), err)
