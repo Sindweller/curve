@@ -24,6 +24,7 @@ package file
 
 import (
 	"context"
+	"log"
 
 	cmderror "github.com/opencurve/curve/tools-v2/internal/error"
 	basecmd "github.com/opencurve/curve/tools-v2/pkg/cli/command"
@@ -126,7 +127,10 @@ func GetFileSize(caller *cobra.Command) (*nameserver2.GetFileSizeResponse, *cmde
 	})
 	getCmd.Cmd.SilenceErrors = true
 	getCmd.Cmd.SilenceUsage = true
+	getCmd.Cmd.SetArgs([]string{"--path", "/RecycleBin"})
+	log.Println(getCmd.Cmd)
 	getCmd.Cmd.SetArgs([]string{"--format", config.FORMAT_NOOUT})
+	log.Println(getCmd.Cmd)
 	err := getCmd.Cmd.Execute()
 	if err != nil {
 		retErr := cmderror.ErrBsGetFileInfo()
